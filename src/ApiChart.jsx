@@ -67,18 +67,18 @@ function App() {
       ...CONFIRMED_TOTAL_TEMPLATE,
       dataPoints: []
     }
-    
+
     let confirmedNew = {
       ...CONFIRMED_NEW_TEMPLATE,
       dataPoints: []
     }
-    
+
     let confirmedDead = {
       ...CONFIRMED_DEAD_TEMPLATE,
       dataPoints: []
     }
-    
-    let predictedTotal =  {
+
+    let predictedTotal = {
       ...PREDICTED_GROWTH_TEMPLATE,
       dataPoints: []
     }
@@ -186,24 +186,23 @@ function App() {
 
   return (
     <div className="App">
-      <div style={{ width: '75%' }}>
-        <SplineChart options={options} />
-        <h3>Last update {lastUpdate ? ((new Date() - lastUpdate) / (1000 * 60)).toFixed(0) : ''} mins ago</h3>
-        <h3>Checking for update in  {(nextUpdate / 1000).toFixed(0)} seconds</h3>
-        <p>
-          This data is obtained from <a href='https://about-corona.net' target='_blank'>about-corona.net</a>
-        </p>
-        <select value={country} onChange={(e) => {
-          setCountry(e.target.value)
-        }}>
-          {Object.keys(CountryCodes).map((key) => (<option value={key}>{CountryCodes[key]}</option>))}
-        </select>
-        <div>
-          <input type = 'checkbox' onChange = {() => {
-            setShowPredicted(showPredicted => !showPredicted)
-        }}/>
-          <span>Show Exponenrial Growth</span>
-        </div>
+
+      <SplineChart options={options} />
+      <h3>Last update {lastUpdate ? ((new Date() - lastUpdate) / (1000 * 60)).toFixed(0) : ''} mins ago</h3>
+      <h3>Checking for update in  {(nextUpdate / 1000).toFixed(0)} seconds</h3>
+      <p>
+        This data is obtained from <a href='https://about-corona.net' target='_blank'>about-corona.net</a>
+      </p>
+      <select value={country} onChange={(e) => {
+        setCountry(e.target.value)
+      }}>
+        {Object.keys(CountryCodes).map((key) => (<option value={key}>{CountryCodes[key]}</option>))}
+      </select>
+      <div>
+        <input type='checkbox' onChange={() => {
+          setShowPredicted(showPredicted => !showPredicted)
+        }} />
+        <span>Show Exponenrial Growth</span>
       </div>
     </div>
   );

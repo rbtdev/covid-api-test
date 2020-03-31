@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  padding: 20px;
 }
 
 .App-logo {
@@ -28,6 +29,21 @@
   color: #61dafb;
 }
 
+.control {
+  text-align: left;
+}
+
+.control .label {
+  display: inline-block;
+  width: 200px;
+  padding: 20px;
+}
+
+.control .value {
+  display: inline-block;
+  width: 100px;
+  padding: 20px;
+}
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

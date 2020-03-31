@@ -20,20 +20,33 @@ const R_TEMPLATE = {
     legendText: "Recovered",
 };
 
+const T_TEMPLATE = {
+    type: "spline",
+    showInLegend: true,
+    legendText: "Total Affected",
+};
+
+const TR_TEMPLATE = {
+    type: "spline",
+    showInLegend: true,
+    legendText: "Total Affected Rate",
+};
+
 function SIRChart() {
 
     // Set up state variables
     let [data, setData] = useState([]);
-    let [RT, setRT] = useState(3.2);
+    let [RT, setRT] = useState(1.3);
     let [RR, setRR] = useState(0.23);
-    let [I0, setI0] = useState(50);
+    let [I0, setI0] = useState(0.01);
+    let [MAX_T, setMAX_T] = useState(20);
 
     //
     // Get new data from api
     //
     const getData = async () => {
 
-        function SIR(s, i, r) {
+        function SIR(s, i, r, rt, rr) {
             let ds = -rt * s * i;
             let di = rt * s * i - rr * i;
             let dr = rr * i;
@@ -60,39 +73,44 @@ function SIRChart() {
             dataPoints: []
         }
 
-        let iStart = I0/100;
+        let totalSeries = {
+            ...T_TEMPLATE,
+            dataPoints: []
+        }
+
+        let totalRateSeries = {
+            ...TR_TEMPLATE,
+            dataPoints: []
+        }
+
+        let iStart = I0 / 100;
         let sStart = 1 - iStart;
         let rStart = 0;
 
-        let maxT = 20;
-
-        let dt = 0.1;
-        let rt = RT * dt;
-        let rr = RR * dt;
+        let dt = .1;
+        let rt = RT*dt;
+        let rr = RR*dt;
         let s = sStart;
         let i = iStart;
         let r = rStart;
+        let ta = iStart;
 
-        for (let t = 0; t <= maxT; t += dt) {
-            let sir = SIR(s, i, r);
+        for (let t = 0; t <= MAX_T; t += dt) {
+            let sir = SIR(s, i, r, rt, rr);
             s = sir.s;
             i = sir.i;
             r = sir.r;
-            console.log(`s: ${s}, i: ${i}, r: ${r}`);
-            susceptableSeries.dataPoints.unshift({
-                x: t,
-                y: s
-            });
-            infectedSeries.dataPoints.unshift({
-                x: t,
-                y: i
-            });
-            recoveredSeries.dataPoints.unshift({
-                x: t,
-                y: r
-            });
+            let taPrev = ta;
+            ta = r + i;
+            let taRate = ta - taPrev;
+            susceptableSeries.dataPoints.unshift({ x: t, y: s });
+            infectedSeries.dataPoints.unshift({ x: t, y: i });
+            recoveredSeries.dataPoints.unshift({ x: t, y: r });
+            totalSeries.dataPoints.unshift({ x: t, y: ta });
+            totalRateSeries.dataPoints.unshift({ x: t, y: taRate })
         }
-        let data = [susceptableSeries, infectedSeries, recoveredSeries]
+
+        let data = [susceptableSeries, infectedSeries, recoveredSeries, totalSeries, totalRateSeries]
 
         // Set state
         setData(data);
@@ -103,7 +121,7 @@ function SIRChart() {
     //
     useEffect(() => {
         getData();
-    }, [RT, RR, I0]);
+    }, [RT, RR, I0, MAX_T]);
 
 
     // Chart options
@@ -132,23 +150,45 @@ function SIRChart() {
     };
 
     return (
-            <div>
-                <SplineChart options={options} />
-                <input type = 'range' min = '.01' max = '5' step = '.01' value={`${RT}`} onChange = {(e) => {
+        <div>
+            <SplineChart options={options} />
+
+            <div className='control'>
+                <div className='label'>Rate of Transmission</div>
+                <input type='range' min='.01' max='5' step='.01' value={`${RT}`} onChange={(e) => {
                     setRT(e.target.value)
-                }} style = {{width: 300}}/>
-                <div>Rate of Transmission = {RT}</div>
+                }} style={{ width: 300 }} />
+                <div className='value'>{RT}</div>
 
-                <input type = 'range' min = '.01' max = '5' step = '.01' value={`${RR}`} onChange = {(e) => {
-                    setRR(e.target.value)
-                }} style = {{width: 300}}/>
-                <div>Rate of Recovery = {RR}</div>
-
-                <input type = 'range' min = '0' max = '100' step = '.001' value={`${I0}`} onChange = {(e) => {
-                    setI0(parseFloat(e.target.value));
-                }} style = {{width: 300}}/>
-                <div>Initial Infected % = {I0}</div>
             </div>
+
+            <div className='control'>
+                <div className='label'>Rate of Recovery</div>
+                <input type='range' min='.01' max='5' step='.01' value={`${RR}`} onChange={(e) => {
+                    setRR(e.target.value)
+                }} style={{ width: 300 }} />
+                <div className='value'>{RR}</div>
+            </div>
+
+            <div className='control'>
+                <div className='label'>Initial Infected</div>
+                <input type='range' min='.001' max='100' step='.001' value={`${I0}`} onChange={(e) => {
+                    setI0(parseFloat(e.target.value));
+                }} style={{ width: 300 }} />
+                <div className='value'>{I0}</div>
+
+            </div>
+
+            <div className='control'>
+                <div className='label'>Time Period</div>
+                <input type='range' min='1' max='50' step='1' value={`${MAX_T}`} onChange={(e) => {
+                    setMAX_T(parseFloat(e.target.value));
+                }} style={{ width: 300 }} />
+                <div className='value'>{MAX_T}</div>
+
+            </div>
+
+        </div>
     );
 }
 
