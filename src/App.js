@@ -33,33 +33,22 @@ const CONFIRMED_DEAD_TEMPLATE = {
   legendText: "Confirmed Dead",
 };
 
-const INITIAL_DATA = [];
-const CONFIRMED_TOTAL_INDEX = 0;
-const CONFIRMED_NEW_INDEX = 1;
-const CONFIRMED_DEAD_INDEX = 2;
-
-INITIAL_DATA[CONFIRMED_TOTAL_INDEX] = {
-  ...CONFIRMED_TOTAL_TEMPLATE,
-  dataPoints: []
-}
-
-INITIAL_DATA[CONFIRMED_NEW_INDEX] = {
-  ...CONFIRMED_NEW_TEMPLATE,
-  dataPoints: []
+const PREDICTED_GROWTH_TEMPLATE = {
+  name: 'Predicted Growth',
+  yValueFormatString: "#,###",
+  xValueFormatString: "MM/DD/YY",
+  type: "line",
+  showInLegend: true,
+  legendText: "Predicted Growth",
 };
-
-INITIAL_DATA[CONFIRMED_DEAD_INDEX] = {
-  ...CONFIRMED_DEAD_TEMPLATE,
-  dataPoints: []
-};
-
 
 function App() {
 
   // Set up state variables
+  const [showPredicted, setShowPredicted] = useState(false);
   const [nextUpdate, setNextUpdate] = useState(UPDATE_INTERVAL);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [data, setData] = useState(INITIAL_DATA);
+  const [data, setData] = useState([]);
   const [country, setCountry] = useState('US');
 
   let countdownTimer = null;
@@ -74,35 +63,65 @@ function App() {
   //
   const getData = async () => {
 
-    let response = await axios.get(`https://corona-api.com/countries/${country}`);
-    let data = response.data.data.timeline.reduce((data, entry) => {
-      data[CONFIRMED_TOTAL_INDEX].dataPoints.push({
-        x: new Date(entry.date),
-        y: entry.confirmed
-      });
-      data[CONFIRMED_NEW_INDEX].dataPoints.push({
-        x: new Date(entry.date),
-        y: entry.new_confirmed
-      });
-      data[CONFIRMED_DEAD_INDEX].dataPoints.push({
-        x: new Date(entry.date),
-        y: entry.deaths
-      });
-
-      return data;
-
-    }, [{
+    let confirmedTotal = {
       ...CONFIRMED_TOTAL_TEMPLATE,
       dataPoints: []
-    }, {
+    }
+    
+    let confirmedNew = {
       ...CONFIRMED_NEW_TEMPLATE,
       dataPoints: []
-    }, {
+    }
+    
+    let confirmedDead = {
       ...CONFIRMED_DEAD_TEMPLATE,
       dataPoints: []
-    }]);
+    }
+    
+    let predictedTotal =  {
+      ...PREDICTED_GROWTH_TEMPLATE,
+      dataPoints: []
+    }
+
+
+
+    let response = await axios.get(`https://corona-api.com/countries/${country}`);
+    response.data.data.timeline.forEach(entry => {
+      let date = new Date(entry.date);
+      confirmedTotal.dataPoints.unshift({
+        x: date,
+        y: entry.confirmed
+      });
+      confirmedNew.dataPoints.unshift({
+        x: date,
+        y: entry.new_confirmed
+      });
+      confirmedDead.dataPoints.unshift({
+        x: date,
+        y: entry.deaths
+      });
+    });
+    let data = [confirmedTotal, confirmedNew, confirmedDead];
+
+    if (showPredicted) {
+      let end = new Date();
+      let date = new Date(confirmedTotal.dataPoints[0].x);
+      let value = 1;
+      while (date < end) {
+        let point = {
+          x: new Date(date),
+          y: value
+        }
+        predictedTotal.dataPoints.push(point)
+        console.log(point)
+        value *= 1.2;
+        date = new Date(date.setDate(date.getDate() + 1));
+      }
+      data.push(predictedTotal);
+    }
 
     // Set state
+    console.log(JSON.stringify(data, null, 2));
     setData(data);
     setLastUpdate(new Date(response.data.data.updated_at));
     setNextUpdate(UPDATE_INTERVAL);
@@ -127,7 +146,6 @@ function App() {
 
   useEffect(() => {
     getData();
-    debugger
     clearInterval(fetchTimer);
     clearInterval(countdownTimer);
     fetchTimer = setInterval(getData, UPDATE_INTERVAL);
@@ -138,7 +156,7 @@ function App() {
       clearInterval(fetchTimer);
       clearInterval(countdownTimer);
     }
-  }, [country]);
+  }, [country, showPredicted]);
 
 
   // Chart options
@@ -170,15 +188,22 @@ function App() {
     <div className="App">
       <div style={{ width: '75%' }}>
         <SplineChart options={options} />
-        <h3>Last update {lastUpdate ? ((new Date() - lastUpdate)/(1000*60)).toFixed(0): ''} mins ago</h3>
-        <h3>Checking for update in  {(nextUpdate/1000).toFixed(0)} seconds</h3>
+        <h3>Last update {lastUpdate ? ((new Date() - lastUpdate) / (1000 * 60)).toFixed(0) : ''} mins ago</h3>
+        <h3>Checking for update in  {(nextUpdate / 1000).toFixed(0)} seconds</h3>
         <p>
-          This data is obtained from <a href = 'https://about-corona.net' target = '_blank'>about-corona.net</a>
+          This data is obtained from <a href='https://about-corona.net' target='_blank'>about-corona.net</a>
         </p>
-        <select value = {country} onChange = { (e) => {
-          setCountry(e.target.value)}}>
-          {Object.keys(CountryCodes).map((key) => (<option value = {key}>{CountryCodes[key]}</option>))}
+        <select value={country} onChange={(e) => {
+          setCountry(e.target.value)
+        }}>
+          {Object.keys(CountryCodes).map((key) => (<option value={key}>{CountryCodes[key]}</option>))}
         </select>
+        <div>
+          <input type = 'checkbox' onChange = {() => {
+            setShowPredicted(showPredicted => !showPredicted)
+        }}/>
+          <span>Show Exponenrial Growth</span>
+        </div>
       </div>
     </div>
   );
