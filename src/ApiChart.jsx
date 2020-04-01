@@ -28,7 +28,7 @@ const CONFIRMED_DEAD_TEMPLATE = {
   name: 'Confirmed Dead',
   yValueFormatString: "#,###",
   xValueFormatString: "MM/DD/YY",
-  type: "column",
+  type: "line",
   showInLegend: true,
   legendText: "Confirmed Dead",
 };

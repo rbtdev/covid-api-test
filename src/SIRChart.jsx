@@ -142,8 +142,8 @@ function SIRChart() {
             includeZero: false,
         },
         legend: {
-            horizontalAlign: "left", // "center" , "right"
-            verticalAlign: "center",  // "top" , "bottom"
+            horizontalAlign: "center", // "center" , "right"
+            verticalAlign: "top",  // "top" , "bottom"
             fontSize: 20
         },
         data // Use latest data from api
