@@ -45,7 +45,6 @@ const PREDICTED_GROWTH_TEMPLATE = {
 function App() {
 
   // Set up state variables
-  const [showPredicted, setShowPredicted] = useState(false);
   const [nextUpdate, setNextUpdate] = useState(UPDATE_INTERVAL);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [data, setData] = useState([]);
@@ -78,11 +77,6 @@ function App() {
       dataPoints: []
     }
 
-    let predictedTotal = {
-      ...PREDICTED_GROWTH_TEMPLATE,
-      dataPoints: []
-    }
-
 
 
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
@@ -103,60 +97,39 @@ function App() {
     });
     let data = [confirmedTotal, confirmedNew, confirmedDead];
 
-    if (showPredicted) {
-      let end = new Date();
-      let date = new Date(confirmedTotal.dataPoints[0].x);
-      let value = 1;
-      while (date < end) {
-        let point = {
-          x: new Date(date),
-          y: value
-        }
-        predictedTotal.dataPoints.push(point)
-        console.log(point)
-        value *= 1.2;
-        date = new Date(date.setDate(date.getDate() + 1));
-      }
-      data.push(predictedTotal);
-    }
-
     // Set state
-    console.log(JSON.stringify(data, null, 2));
     setData(data);
     setLastUpdate(new Date(response.data.data.updated_at));
     setNextUpdate(UPDATE_INTERVAL);
+  }
+
+  const startFeed = () => {
+    stopFeed();
+    getData();
+    fetchTimer = setInterval(getData, UPDATE_INTERVAL);
+    countdownTimer = setInterval(() => setNextUpdate(nextUpdate => nextUpdate - 1000), 1000);
+  }
+
+  const stopFeed = () => {
+      clearInterval(fetchTimer);
+      clearInterval(countdownTimer);
   }
 
   //
   // On monunt, start data updates and countdown
   //
   useEffect(() => {
-    getData();
-    clearInterval(fetchTimer);
-    clearInterval(countdownTimer);
-    fetchTimer = setInterval(getData, UPDATE_INTERVAL);
-    countdownTimer = setInterval(() => {
-      setNextUpdate(nextUpdate => nextUpdate - 1000);
-    }, 1000);
-    return () => {
-      clearInterval(fetchTimer);
-      clearInterval(countdownTimer);
-    }
+    startFeed()
+    return stopFeed;
   }, []);
 
+  //
+  // Switch feed if country changes
+  //
   useEffect(() => {
-    getData();
-    clearInterval(fetchTimer);
-    clearInterval(countdownTimer);
-    fetchTimer = setInterval(getData, UPDATE_INTERVAL);
-    countdownTimer = setInterval(() => {
-      setNextUpdate(nextUpdate => nextUpdate - 1000);
-    }, 1000);
-    return () => {
-      clearInterval(fetchTimer);
-      clearInterval(countdownTimer);
-    }
-  }, [country, showPredicted]);
+    startFeed();
+    return stopFeed;
+  }, [country]);
 
 
   // Chart options
