@@ -72,7 +72,8 @@ function App() {
 
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
     response.data.data.timeline.forEach(entry => {
-      let date = new Date(entry.date);
+      let [year, month, day] = entry.date.split('-');
+      let date = new Date(year, parseInt(month, 10)-1, day); // Month is 0 based for Date constructor
       confirmedTotal.dataPoints.unshift({
         x: date,
         y: entry.confirmed
@@ -86,6 +87,7 @@ function App() {
         y: entry.deaths
       });
     });
+    
     let data = [confirmedTotal, confirmedNew, confirmedDead];
 
     // Set state
@@ -111,7 +113,6 @@ function App() {
   // This will happen when the country is first set when the component initializes
   //
   useEffect(() => {
-    debugger
     startFeed();
     return stopFeed;
   }, [country]);
