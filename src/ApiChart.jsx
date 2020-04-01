@@ -33,15 +33,6 @@ const CONFIRMED_DEAD_TEMPLATE = {
   legendText: "Confirmed Dead",
 };
 
-const PREDICTED_GROWTH_TEMPLATE = {
-  name: 'Predicted Growth',
-  yValueFormatString: "#,###",
-  xValueFormatString: "MM/DD/YY",
-  type: "line",
-  showInLegend: true,
-  legendText: "Predicted Growth",
-};
-
 function App() {
 
   // Set up state variables
@@ -116,17 +107,11 @@ function App() {
   }
 
   //
-  // On monunt, start data updates and countdown
-  //
-  useEffect(() => {
-    startFeed()
-    return stopFeed;
-  }, []);
-
-  //
   // Switch feed if country changes
+  // This will happen when the country is first set when the component initializes
   //
   useEffect(() => {
+    debugger
     startFeed();
     return stopFeed;
   }, [country]);
