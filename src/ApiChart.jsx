@@ -177,8 +177,8 @@ function App() {
       includeZero: false
     },
     legend: {
-      horizontalAlign: "left", // "center" , "right"
-      verticalAlign: "center",  // "top" , "bottom"
+      horizontalAlign: "center", // "center" , "right"
+      verticalAlign: "bottom",  // "top" , "bottom"
       fontSize: 20
     },
     data // Use latest data from api
@@ -186,24 +186,24 @@ function App() {
 
   return (
     <div className="App">
-
+      <div style={{ padding: 20 }}>
+        <div style={{ display: 'inline-block', padding: 20 }}>
+          Select country:
+        </div>
+        <select value={country} onChange={(e) => {
+          setCountry(e.target.value)
+        }}>
+          {Object.keys(CountryCodes).map((key) => (<option value={key}>{CountryCodes[key]}</option>))}
+        </select>
+      </div>
       <SplineChart options={options} />
       <h3>Last update {lastUpdate ? ((new Date() - lastUpdate) / (1000 * 60)).toFixed(0) : ''} mins ago</h3>
       <h3>Checking for update in  {(nextUpdate / 1000).toFixed(0)} seconds</h3>
       <p>
         This data is obtained from <a href='https://about-corona.net' target='_blank'>about-corona.net</a>
       </p>
-      <select value={country} onChange={(e) => {
-        setCountry(e.target.value)
-      }}>
-        {Object.keys(CountryCodes).map((key) => (<option value={key}>{CountryCodes[key]}</option>))}
-      </select>
-      <div>
-        <input type='checkbox' onChange={() => {
-          setShowPredicted(showPredicted => !showPredicted)
-        }} />
-        <span>Show Exponenrial Growth</span>
-      </div>
+
+
     </div>
   );
 }
