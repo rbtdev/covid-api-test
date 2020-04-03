@@ -39,6 +39,7 @@ function App() {
   const [nextUpdate, setNextUpdate] = useState(UPDATE_INTERVAL);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [data, setData] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [country, setCountry] = useState('US');
 
   let countdownTimer = null;
@@ -71,7 +72,8 @@ function App() {
 
 
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
-    response.data.data.timeline.forEach(entry => {
+    let _data = response.data.data;
+    _data.timeline.forEach(entry => {
       let [year, month, day] = entry.date.split('-');
       let date = new Date(year, parseInt(month, 10)-1, day); // Month is 0 based for Date constructor
       confirmedTotal.dataPoints.unshift({
@@ -89,9 +91,19 @@ function App() {
     });
     
     let data = [confirmedTotal, confirmedNew, confirmedDead];
+    let summary = {
+      population: _data.population,
+      percentCases: _data.latest_data.confirmed/_data.population,
+      confirmed: _data.latest_data.confirmed,
+      deaths: _data.latest_data.deaths,
+      recovered: _data.latest_data.recovered,
+      deathRate: _data.latest_data.calculated.death_rate,
+      recoveryRate: _data.latest_data.calculated.recovery_rate
+    }
 
     // Set state
     setData(data);
+    setSummary(summary);
     setLastUpdate(new Date(response.data.data.updated_at));
     setNextUpdate(UPDATE_INTERVAL);
   }
@@ -143,6 +155,16 @@ function App() {
     data // Use latest data from api
   };
 
+  const getSummary = () => {
+    if (!summary) return null;
+    return (
+      <div style = {{ margin: '30px', textAlign: 'left'}}>
+        <div>Population: {parseInt(summary.population, 10).toLocaleString()}</div>
+        <div>Case Percentage: {(summary.percentCases*100).toFixed(2)}% of total population</div>
+        <div>Death Percentage: {summary.deathRate.toFixed(2)}% of confirmed cases</div>
+      </div>
+    )
+  }
   return (
     <div className="App">
       <div style={{ padding: 20 }}>
@@ -156,6 +178,9 @@ function App() {
         </select>
       </div>
       <SplineChart options={options} />
+      <div className = 'summary'>
+        {getSummary()}
+      </div>
       <h3>Last update {lastUpdate ? ((new Date() - lastUpdate) / (1000 * 60)).toFixed(0) : ''} mins ago</h3>
       <h3>Checking for update in  {(nextUpdate / 1000).toFixed(0)} seconds</h3>
       <p>
