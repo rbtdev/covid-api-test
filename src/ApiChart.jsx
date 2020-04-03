@@ -92,13 +92,13 @@ function App() {
     
     let data = [confirmedTotal, confirmedNew, confirmedDead];
     let summary = {
-      population: _data.population,
-      percentCases: _data.latest_data.confirmed/_data.population,
-      confirmed: _data.latest_data.confirmed,
-      deaths: _data.latest_data.deaths,
-      recovered: _data.latest_data.recovered,
-      deathRate: _data.latest_data.calculated.death_rate,
-      recoveryRate: _data.latest_data.calculated.recovery_rate
+      population: _data.population || 0,
+      percentCases: _data.latest_data.confirmed/_data.population || 0,
+      confirmed: _data.latest_data.confirmed || 0,
+      deaths: _data.latest_data.deaths | 0,
+      recovered: _data.latest_data.recovered || 0,
+      deathRate: _data.latest_data.calculated.death_rate || 0,
+      recoveryRate: _data.latest_data.calculated.recovery_rate || 0
     }
 
     // Set state
@@ -157,11 +157,12 @@ function App() {
 
   const getSummary = () => {
     if (!summary) return null;
+    let { population = 0, percentCases = 0, deathRate = 0} = summary;
     return (
       <div style = {{ margin: '30px', textAlign: 'left'}}>
-        <div>Population: {parseInt(summary.population, 10).toLocaleString()}</div>
-        <div>Case Percentage: {(summary.percentCases*100).toFixed(2)}% of total population</div>
-        <div>Death Percentage: {summary.deathRate.toFixed(2)}% of confirmed cases</div>
+        <div>Population: {population.toLocaleString()}</div>
+        <div>Case Percentage: {(percentCases*100).toFixed(2)}% of total population</div>
+        <div>Death Percentage: {deathRate.toFixed(2)}% of confirmed cases</div>
       </div>
     )
   }
