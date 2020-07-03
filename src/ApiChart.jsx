@@ -16,12 +16,12 @@ const CONFIRMED_TOTAL_TEMPLATE = {
 };
 
 const CONFIRMED_NEW_TEMPLATE = {
-  name: 'New Confirmed',
+  name: 'New Confirmed Cases',
   yValueFormatString: "#,###",
   xValueFormatString: "MM/DD/YY",
   type: "column",
   showInLegend: true,
-  legendText: "New Confirmed",
+  legendText: "New Confirmed Cases",
 };
 
 const CONFIRMED_DEAD_TEMPLATE = {
@@ -73,27 +73,31 @@ function App() {
 
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
     let _data = response.data.data;
+    debugger
     _data.timeline.forEach(entry => {
-      let [year, month, day] = entry.date.split('-');
-      let date = new Date(year, parseInt(month, 10)-1, day); // Month is 0 based for Date constructor
-      confirmedTotal.dataPoints.unshift({
-        x: date,
-        y: entry.confirmed
-      });
-      confirmedNew.dataPoints.unshift({
-        x: date,
-        y: entry.new_confirmed
-      });
-      confirmedDead.dataPoints.unshift({
-        x: date,
-        y: entry.deaths
-      });
+      if (!entry.is_in_progress) {
+
+        let [year, month, day] = entry.date.split('-');
+        let date = new Date(year, parseInt(month, 10) - 1, day); // Month is 0 based for Date constructor
+        // confirmedTotal.dataPoints.unshift({
+        //   x: date,
+        //   y: entry.confirmed/_data.population
+        // });
+        confirmedNew.dataPoints.unshift({
+          x: date,
+          y: 100000*entry.new_confirmed/_data.population
+        });
+        // confirmedDead.dataPoints.unshift({
+        //   x: date,
+        //   y: 100000*entry.deaths/_data.population
+        // });
+      }
     });
-    
+
     let data = [confirmedTotal, confirmedNew, confirmedDead];
     let summary = {
       population: _data.population || 0,
-      percentCases: _data.latest_data.confirmed/_data.population || 0,
+      percentCases: _data.latest_data.confirmed / _data.population || 0,
       confirmed: _data.latest_data.confirmed || 0,
       today: _data.today,
       deaths: _data.latest_data.deaths | 0,
@@ -117,8 +121,8 @@ function App() {
   }
 
   const stopFeed = () => {
-      clearInterval(fetchTimer);
-      clearInterval(countdownTimer);
+    clearInterval(fetchTimer);
+    clearInterval(countdownTimer);
   }
 
   //
@@ -140,12 +144,12 @@ function App() {
       text: `${CountryCodes[country]} Covid-19 Stats`
     },
     axisX: {
-      valueFormatString: "MM/DD/YY",
-      interval: 7,
-      intervalType: "day"
+      valueFormatString: "MM/YY",
+      interval: 1,
+      intervalType: "month"
     },
     axisY: {
-      title: "People",
+      title: "Per 100,000 People",
       includeZero: false
     },
     legend: {
@@ -158,12 +162,12 @@ function App() {
 
   const getSummary = () => {
     if (!summary) return null;
-    let { today, population = 0, confirmed = 0, percentCases = 0, deathRate = 0} = summary;
+    let { today, population = 0, confirmed = 0, percentCases = 0, deathRate = 0 } = summary;
     return (
-      <div style = {{ margin: '30px', textAlign: 'left'}}>
+      <div style={{ margin: '30px', textAlign: 'left' }}>
         <div>Population: {population.toLocaleString()}</div>
         <div>Confirmed Cases: {confirmed.toLocaleString()}</div>
-        <div>Case Percentage: {(percentCases*100).toFixed(2)}% of total population</div>
+        <div>Case Percentage: {(percentCases * 100).toFixed(2)}% of total population</div>
         <div>Mortality Rate: {deathRate.toFixed(2)}%</div>
         <div>New Cases Today: {today.confirmed.toLocaleString()}</div>
         <div>Deaths Today: {today.deaths.toLocaleString()}</div>
@@ -183,7 +187,7 @@ function App() {
         </select>
       </div>
       <SplineChart options={options} />
-      <div className = 'summary'>
+      <div className='summary'>
         {getSummary()}
       </div>
       <h3>Last update {lastUpdate ? ((new Date() - lastUpdate) / (1000 * 60)).toFixed(0) : ''} mins ago</h3>
