@@ -65,7 +65,7 @@ function App() {
 
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
     let _data = response.data.data;
-    let start = moment('March 2020', 'MMMM YYYY')
+    let start = moment('June 2020', 'MMMM YYYY')
     _data.timeline.forEach(entry => {
       let date = moment(entry.date, "YYYY-MM-DD");
       if (!entry.is_in_progress && date.isAfter(start)) {
@@ -129,7 +129,7 @@ function App() {
   // Chart options
   const options = {
     zoomEnabled: true,
-    zoomType: 'xy',
+    panEnabled: true,
     animationEnabled: true,
     title: {
       text: `${CountryCodes[country]} Covid-19 Stats`
