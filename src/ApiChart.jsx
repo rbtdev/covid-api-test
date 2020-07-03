@@ -1,33 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import SplineChart from './spline-chart';
 import axios from 'axios';
+import moment from 'moment';
 import CountryCodes from './ISO3166-1.alpha2.json';
 import './App.css';
 
 const UPDATE_INTERVAL = 60 * 1000; // One minute update interval
 
 const CONFIRMED_TOTAL_TEMPLATE = {
-  name: 'Total Confirmed',
-  yValueFormatString: "#,###",
-  xValueFormatString: "MM/DD/YY",
   type: "line",
   showInLegend: true,
   legendText: "Total Confirmed",
 };
 
 const CONFIRMED_NEW_TEMPLATE = {
-  name: 'New Confirmed Cases',
-  yValueFormatString: "#,###",
-  xValueFormatString: "MM/DD/YY",
   type: "column",
   showInLegend: true,
   legendText: "New Confirmed Cases",
 };
 
 const CONFIRMED_DEAD_TEMPLATE = {
-  name: 'Confirmed Dead',
-  yValueFormatString: "#,###",
-  xValueFormatString: "MM/DD/YY",
   type: "line",
   showInLegend: true,
   legendText: "Confirmed Dead",
@@ -73,23 +65,22 @@ function App() {
 
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
     let _data = response.data.data;
-    debugger
+    let start = moment('March 2020', 'MMMM YYYY')
     _data.timeline.forEach(entry => {
-      if (!entry.is_in_progress) {
+      let date = moment(entry.date, "YYYY-MM-DD");
+      if (!entry.is_in_progress && date.isAfter(start)) {
 
-        let [year, month, day] = entry.date.split('-');
-        let date = new Date(year, parseInt(month, 10) - 1, day); // Month is 0 based for Date constructor
-        // confirmedTotal.dataPoints.unshift({
-        //   x: date,
-        //   y: entry.confirmed/_data.population
-        // });
         confirmedNew.dataPoints.unshift({
-          x: date,
-          y: 100000*entry.new_confirmed/_data.population
+          x: date.toDate(),
+          y: entry.new_confirmed
         });
+        // confirmedTotal.dataPoints.unshift({
+        //   x: date.toDate(),
+        //   y: entry.confirmed
+        // });
         // confirmedDead.dataPoints.unshift({
-        //   x: date,
-        //   y: 100000*entry.deaths/_data.population
+        //   x: date.toDate(),
+        //   y: 100000*entry.deaths
         // });
       }
     });
@@ -144,12 +135,12 @@ function App() {
       text: `${CountryCodes[country]} Covid-19 Stats`
     },
     axisX: {
-      valueFormatString: "MM/YY",
-      interval: 1,
-      intervalType: "month"
+      valueFormatString: "MMM-DD-YYYY",
+      interval: 2,
+      intervalType: "week"
     },
     axisY: {
-      title: "Per 100,000 People",
+      title: "People",
       includeZero: false
     },
     legend: {
