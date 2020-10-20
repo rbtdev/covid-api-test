@@ -7,6 +7,7 @@ import './App.css';
 
 const UPDATE_INTERVAL = 60 * 1000; // One minute update interval
 
+
 const CONFIRMED_TOTAL_TEMPLATE = {
   type: "line",
   showInLegend: true,
