@@ -19,6 +19,12 @@ const CONFIRMED_NEW_TEMPLATE = {
   legendText: "New Confirmed Cases",
 };
 
+const CONFIRMED_NEW_AVG_TEMPLATE = {
+  type: "line",
+  showInLegend: true,
+  legendText: "New Confirmed Average",
+};
+
 const CONFIRMED_DEAD_TEMPLATE = {
   type: "line",
   showInLegend: true,
@@ -50,6 +56,10 @@ function App() {
       ...CONFIRMED_TOTAL_TEMPLATE,
       dataPoints: []
     }
+    let confirmedNewAvg = {
+      ...CONFIRMED_NEW_AVG_TEMPLATE,
+      dataPoints: []
+    }
 
     let confirmedNew = {
       ...CONFIRMED_NEW_TEMPLATE,
@@ -66,7 +76,8 @@ function App() {
     let response = await axios.get(`https://corona-api.com/countries/${country}`);
     let _data = response.data.data;
     let start = moment('March 2020', 'MMMM YYYY')
-    _data.timeline.forEach(entry => {
+    _data.timeline.reverse();
+    _data.timeline.forEach((entry, index) => {
       let date = moment(entry.date, "YYYY-MM-DD");
       if (!entry.is_in_progress && date.isAfter(start)) {
 
@@ -74,6 +85,25 @@ function App() {
           x: date.toDate(),
           y: entry.new_confirmed
         });
+
+        if (index >= 7) {
+          let entries = _data.timeline.slice(index-7, index);
+          let sum = entries.reduce((s, e) => s+= e.new_confirmed, 0);
+          let avg = sum/7;
+          debugger
+          confirmedNewAvg.dataPoints.unshift({
+            x: date.toDate(),
+            y: avg
+          });
+        }
+        else {
+          confirmedNewAvg.dataPoints.unshift({
+            x: date.toDate(),
+            y: 0
+          });
+        }
+
+
         // confirmedTotal.dataPoints.unshift({
         //   x: date.toDate(),
         //   y: entry.confirmed
@@ -85,7 +115,7 @@ function App() {
       }
     });
 
-    let data = [confirmedTotal, confirmedNew, confirmedDead];
+    let data = [confirmedTotal, confirmedNew, confirmedDead, confirmedNewAvg];
     let summary = {
       population: _data.population || 0,
       percentCases: _data.latest_data.confirmed / _data.population || 0,
